@@ -1,0 +1,129 @@
+{
+	"info": {
+		"name": "Gated Community - Full API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) pm.environment.set(\"token\", jsonData.token);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"master@system.com\",\n    \"password\": \"MasterKey2026!\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{baseUrl}}/auth/login" }
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Super Admin",
+			"item": [
+				{
+					"name": "Create Complex",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"complex_name\": \"Hacienda Real\",\n    \"address\": \"Km 15 Carretera Nacional\",\n    \"admin_data\": {\n        \"first_name\": \"Carlos\",\n        \"last_name\": \"Admin\",\n        \"email\": \"carlos@hacienda.com\",\n        \"password\": \"Admin2026!\",\n        \"phone\": \"5551234567\"\n    }\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/super/complexes" }
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Admin Management",
+			"item": [
+				{
+					"name": "Register Resident",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"Ana\",\n    \"last_name\": \"García\",\n    \"email\": \"ana.residente@gmail.com\",\n    \"role\": \"resident\",\n    \"house_id\": \"PASTE_HOUSE_ID_HERE\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/admin/members" }
+					}
+				},
+				{
+					"name": "Monthly Payment Report",
+					"request": {
+						"method": "GET",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+						"url": {
+							"raw": "{{baseUrl}}/admin/reports/payments?month=2026-02",
+							"query": [ { "key": "month", "value": "2026-02" } ]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Resident Actions",
+			"item": [
+				{
+					"name": "Create Visit QR",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"visitor_name\": \"John Doe\",\n    \"visitor_email\": \"john@visitor.com\",\n    \"visit_date\": \"2026-02-25\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/resident/visits" }
+					}
+				},
+				{
+					"name": "Add Vehicle",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"plate\": \"ABC-1234\",\n    \"brand\": \"Toyota\",\n    \"color\": \"Grey\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/resident/house/vehicles" }
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Security (Booth)",
+			"item": [
+				{
+					"name": "Scan Entry",
+					"request": {
+						"method": "POST",
+						"header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"qr_hash\": \"PASTE_HASH_FROM_EMAIL_OR_DB\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/security/scan-entry" }
+					}
+				}
+			]
+		}
+	]
+}
