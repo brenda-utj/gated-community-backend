@@ -14,6 +14,9 @@ import adminRoutes from './routes/admin.routes';
 import residentRoutes from './routes/resident.routes';
 import userRoutes from './routes/user.routes';
 import authRoutes from './routes/auth.routes';
+import reportRoutes from './routes/report.routes';
+import reservationRoutes from './routes/reservation.routes';  
+
 
 dotenv.config();
 
@@ -37,6 +40,8 @@ app.use('/api/super', superRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/resident', residentRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/reservations', reservationRoutes);
 
 // --- Manejo de errores 404 ---
 app.use((req, res) => {

@@ -18,6 +18,7 @@ export const registerVisit = async (req: any, res: Response) => {
 
     res.status(201).json(result);
   } catch (error: any) {
+    console.error("ERROR VISITS:", error);
     res.status(500).json({ message: error.message || 'Error creating visit' });
   }
 };
