@@ -3,18 +3,56 @@ import * as PaymentService from '../services/payment.service';
 import MaintenancePayment from '../models/MaintenancePayment';
 import House from '../models/House';
 
+// export const uploadReceipt = async (req: any, res: Response) => {
+//   try {
+//     if (!req.file) return res.status(400).json({ message: "Receipt image is required" });
+
+//     const { amount, month_covered } = req.body;
+
+//     const payment = await PaymentService.processPaymentUpload({
+//       house_id: req.user.house_id,
+//       resident_id: req.user.id,
+//       amount: Number(amount),
+//       month_covered,
+//       file: req.file
+//     });
+
+//     res.status(201).json({ message: "Receipt uploaded successfully", payment });
+//   } catch (error: any) {
+//     res.status(400).json({ message: error.message });
+//   }
+// };
+
 export const uploadReceipt = async (req: any, res: Response) => {
   try {
     if (!req.file) return res.status(400).json({ message: "Receipt image is required" });
 
     const { amount, month_covered } = req.body;
 
-    const payment = await PaymentService.processPaymentUpload({
+    // Verificar que no exista ya un pago pendiente/verificado para ese mes
+    const existing = await MaintenancePayment.findOne({
       house_id: req.user.house_id,
-      resident_id: req.user.id,
-      amount: Number(amount),
       month_covered,
-      file: req.file
+      status: { $in: ['pending', 'verified'] }
+    });
+
+    if (existing) {
+      return res.status(400).json({ 
+        message: `A payment for ${month_covered} is already registered or pending.` 
+      });
+    }
+
+    // Convertir buffer a base64
+    const receipt_base64 = req.file.buffer.toString('base64');
+    const receipt_mime   = req.file.mimetype;
+
+    const payment = await MaintenancePayment.create({
+      house_id:    req.user.house_id,
+      resident_id: req.user.id,
+      amount:      Number(amount),
+      month_covered,
+      receipt_base64,
+      receipt_mime
     });
 
     res.status(201).json({ message: "Receipt uploaded successfully", payment });
@@ -22,6 +60,7 @@ export const uploadReceipt = async (req: any, res: Response) => {
     res.status(400).json({ message: error.message });
   }
 };
+
 export const getMyPayments = async (req: any, res: Response) => {
   try {
     const { role, house_id, complex_id } = req.user;
@@ -53,6 +92,7 @@ export const getMyPayments = async (req: any, res: Response) => {
     res.status(500).json({ message: "Error al obtener pagos", error: error.message });
   }
 };
+
 // Solo para ADMIN: Validar pago
 export const verifyPayment = async (req: any, res: Response) => {
   const { paymentId } = req.params;

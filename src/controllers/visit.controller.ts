@@ -25,10 +25,9 @@ export const registerVisit = async (req: any, res: Response) => {
 
 export const getVisitHistory = async (req: any, res: Response) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, page = '1', limit = '6' } = req.query;  // ← agrega page y limit
     const query: any = { house_id: req.user.house_id };
 
-    // Filtro por rango de fechas si se proporcionan
     if (startDate && endDate) {
       query.visit_date = {
         $gte: new Date(startDate as string),
@@ -36,8 +35,25 @@ export const getVisitHistory = async (req: any, res: Response) => {
       };
     }
 
-    const history = await Visit.find(query).sort({ visit_date: -1 });
-    res.json(history);
+    const now = new Date();
+    await Visit.updateMany(
+      { house_id: req.user.house_id, status: 'pending', expiry_date: { $lt: now } },
+      { $set: { status: 'expired' } }
+    );
+
+    const pageNum  = Math.max(1, parseInt(page as string));
+    const limitNum = Math.max(1, parseInt(limit as string));
+    const skip     = (pageNum - 1) * limitNum;
+
+    const [visits, total] = await Promise.all([
+      Visit.find(query).sort({ visit_date: -1 }).skip(skip).limit(limitNum),
+      Visit.countDocuments(query)
+    ]);
+
+    res.json({
+      data: visits,
+      pagination: { total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) }
+    });
   } catch (error) {
     res.status(500).json({ message: "Error fetching history", error });
   }
