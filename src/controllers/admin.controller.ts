@@ -45,19 +45,34 @@ export const registerUserByAdmin = async (req: Request, res: Response) => {
 
 export const getMembers = async (req: Request, res: Response) => {
   try {
-    // El complex_id viene del middleware authenticate
-    const { complex_id } = req.user!;
+    // 1. Extraemos rol y complex_id del usuario autenticado (desde el middleware)
+    const { role, complex_id } = req.user!;
 
-    const members = await User.find({ 
-      complex_id, 
-      deleted_at: null // Filtramos eliminados
-    })
-    .populate('house_id') // Traemos info de la casa
-    .sort({ first_name: 1 });
+    // 2. Construimos el filtro dinámico
+    // Siempre filtramos los que no están eliminados (deleted_at: null)
+    const filter: any = { deleted_at: null };
+
+    // Si NO es super_admin, restringimos la búsqueda a su complejo
+    if (role !== 'super_admin') {
+      filter.complex_id = complex_id;
+
+            // ❗ Excluir super_admin
+      filter.role = { $ne: 'super_admin' };
+    }
+
+    // 3. Ejecutamos la consulta
+    const members = await User.find(filter)
+      .populate('house_id')       // Info de la casa (calle, número)
+      .populate('complex_id', 'name') // Info del complejo (solo el nombre)
+      .sort({ first_name: 1 });
 
     res.status(200).json(members);
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching members', error });
+  } catch (error: any) {
+    console.error("Error fetching members:", error);
+    res.status(500).json({ 
+      message: 'Error al obtener los miembros', 
+      error: error.message 
+    });
   }
 };
 

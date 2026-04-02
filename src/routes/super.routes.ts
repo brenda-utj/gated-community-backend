@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createComplexWithAdmin, deleteComplex, getComplexes, updateComplex } from '../controllers/superadmin.controller';
+import { createComplexWithAdmin, deleteComplex, getComplexes, updateComplex, changeComplexStatus } from '../controllers/superadmin.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import { authorize } from '../middlewares/role.middleware';
 
@@ -30,6 +30,12 @@ router.patch(
   authorize(['super_admin']),
   updateComplex
 );
+
+router.patch(
+  '/complexes/:id/status', 
+  authenticate(), 
+  authorize(['super_admin']), 
+  changeComplexStatus);
 
 router.delete('/complexes/:id', authenticate(), authorize(['super_admin']), deleteComplex);
 

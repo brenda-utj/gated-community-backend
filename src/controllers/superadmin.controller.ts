@@ -95,21 +95,28 @@ export const getComplexes = async (req: Request, res: Response) => {
 
 export const updateComplex = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const { name, complex_name, address, subscription_status } = req.body;
+    const { id } = req.params; // El ID del complejo
+    const { 
+      name, 
+      complex_name, 
+      address, 
+      subscription_status,
+      admin_first_name,
+      admin_last_name,
+      admin_email,
+      admin_password // <--- Contraseña opcional
+    } = req.body;
 
-    // Mapeo flexible: aceptamos 'name' o 'complex_name' desde el front
-    const updateData = {
+    // 1. Actualizar el Complejo
+    const complexUpdateData = {
       name: name || complex_name,
       address,
       subscription_status
     };
 
-    // { new: true } devuelve el documento actualizado en lugar del viejo
-    // { runValidators: true } asegura que se respeten los Enums y requeridos
     const updatedComplex = await Complex.findByIdAndUpdate(
       id,
-      { $set: updateData },
+      { $set: complexUpdateData },
       { new: true, runValidators: true }
     );
 
@@ -117,9 +124,30 @@ export const updateComplex = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Fraccionamiento no encontrado' });
     }
 
+    // 2. Preparar la actualización del Admin
+    const adminUpdateData: any = {
+      first_name: admin_first_name,
+      last_name: admin_last_name,
+      email: admin_email,
+    };
+
+    // Lógica para la contraseña: solo si viene en el body y no está vacía
+    if (admin_password && admin_password.trim() !== "") {
+      const salt = await bcrypt.genSalt(10);
+      adminUpdateData.password = await bcrypt.hash(admin_password, salt);
+    }
+
+    // 3. Buscar y actualizar al usuario con rol 'admin' vinculado a este complejo
+    const updatedAdmin = await User.findOneAndUpdate(
+      { complex_id: id, role: 'admin' }, 
+      { $set: adminUpdateData },
+      { new: true, runValidators: true }
+    );
+
     res.status(200).json({
-      message: 'Fraccionamiento actualizado correctamente',
-      complex: updatedComplex
+      message: 'Fraccionamiento y Administrador actualizados correctamente',
+      complex: updatedComplex,
+      admin: updatedAdmin ? { email: updatedAdmin.email } : "No se encontró admin para este complejo"
     });
 
   } catch (error: any) {
@@ -128,6 +156,23 @@ export const updateComplex = async (req: Request, res: Response) => {
       message: 'Error al actualizar el fraccionamiento', 
       error: error.message 
     });
+  }
+};
+
+export const changeComplexStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { subscription_status } = req.body;
+
+    const updated = await Complex.findByIdAndUpdate(
+      id, 
+      { $set: { subscription_status } }, 
+      { new: true }
+    );
+
+    res.status(200).json({ message: 'Estado actualizado', status: updated?.subscription_status });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al cambiar estado' });
   }
 };
 

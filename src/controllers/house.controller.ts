@@ -62,11 +62,34 @@ export const addPet = async (req: any, res: Response) => {
 
 export const getHouses = async (req: any, res: Response) => {
   try {
-    const { complex_id } = req.user;
-    const houses = await House.find({ complex_id }).sort({ street: 1, house_number: 1 });
+    // 1. Extraemos el rol y el complex_id del usuario autenticado
+    const { role, complex_id, id } = req.user;
+
+    const adminUser = await User.findById(id);
+
+    if (!adminUser) {
+      return res.status(404).json({ message: 'Admin user not found' });
+    }
+
+    // 2. Definimos el filtro de búsqueda dinámicamente
+    // Si es super_admin, el filtro es un objeto vacío (trae todo)
+    // De lo contrario, filtramos por su complejo asignado
+    const filter = role === 'super_admin' ? {} : { complex_id: adminUser.complex_id };
+
+    // 3. Ejecutamos la búsqueda con el filtro correspondiente
+    // Agregamos .populate('complex_id', 'name') por si el super_admin 
+    // necesita saber a qué complejo pertenece cada casa en la lista
+    const houses = await House.find(filter)
+      .populate('complex_id', 'name') 
+      .sort({ street: 1, house_number: 1 });
+
     res.status(200).json(houses);
-  } catch (error) {
-    res.status(500).json({ message: 'Error al obtener casas', error });
+  } catch (error: any) {
+    console.error("Error en getHouses:", error);
+    res.status(500).json({ 
+      message: 'Error al obtener casas', 
+      error: error.message 
+    });
   }
 };
 

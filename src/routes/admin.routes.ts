@@ -19,7 +19,7 @@ const router = Router();
  * GESTIÓN DE VIVIENDAS (CASAS)
  * Un administrador solo gestiona las casas de su propio complex_id
  */
-router.get('/houses', authenticate(), authorize(['admin']), getHouses);
+router.get('/houses', authenticate(), authorize(['admin', 'super_admin']), getHouses);
 router.post('/houses', authenticate(), authorize(['admin']), createHouse);
 router.patch('/houses/:id', authenticate(), authorize(['admin']), updateHouse);
 router.delete('/houses/:id', authenticate(), authorize(['admin']), deleteHouse);
@@ -29,7 +29,7 @@ router.delete('/houses/:id', authenticate(), authorize(['admin']), deleteHouse);
  */
 // --- GESTIÓN DE MIEMBROS ---
 // Obtener todos
-router.get('/members', authenticate(), authorize(['admin']), getMembers);
+router.get('/members', authenticate(), authorize(['admin', 'super_admin']), getMembers);
 // Crear
 router.post('/members', authenticate(), authorize(['admin']), registerUserByAdmin);
 // Editar
