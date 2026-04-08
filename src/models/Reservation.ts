@@ -1,6 +1,12 @@
 import mongoose from 'mongoose';
 
 const reservationSchema = new mongoose.Schema({
+  complex_id: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Complex', 
+    required: true 
+  },
+  
   house_id: { type: mongoose.Schema.Types.ObjectId, ref: 'House', required: true },
   user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
@@ -14,7 +20,7 @@ const reservationSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: ['pending', 'approved', 'rejected', 'cancelled'],
     default: 'pending'
   }
 

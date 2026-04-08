@@ -45,7 +45,7 @@ export const login = async (req: Request, res: Response) => {
         id: user._id,
         first_name: user.first_name,
         last_name: user.last_name,
-        role: user.role,
+        role: user.role,email: user.email,
         // Info del complejo (útil para Admin, Resident, Security)
         complex: user.complex_id,
         // Info de la casa (solo si es Residente)
